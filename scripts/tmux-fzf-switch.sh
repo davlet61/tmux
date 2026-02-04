@@ -2,7 +2,7 @@
 
 FZF_COLORS="bg:#282c34,fg:#abb2bf,hl:#61afef,fg+:#e5c07b,bg+:#414858,hl+:#61afef,prompt:#98c379,pointer:#c678dd,marker:#e06c75,header:#5c6370,border:#495162"
 
-VIM_KEYS="j,k,g,G,q,/,i,ctrl-d,ctrl-u"
+VIM_KEYS="j,k,g,G,q,/,i,ctrl-d,ctrl-u,0,1,2,3,4,5,6,7,8,9"
 
 FZF_OPTS=(
   --ansi
@@ -23,6 +23,11 @@ FZF_OPTS=(
   --bind "esc:transform:[[ \$FZF_PROMPT == '/ ' ]] && echo 'disable-search+rebind($VIM_KEYS)+clear-query+change-prompt(  )' || echo 'abort'"
   --bind "change:transform-query:[[ \$FZF_PROMPT == '/ ' ]] && echo \$FZF_QUERY || echo ''"
 )
+
+# Number keys enter search mode with the digit pre-filled
+for n in {0..9}; do
+  FZF_OPTS+=(--bind "$n:unbind($VIM_KEYS)+enable-search+change-prompt(/ )+change-query($n)")
+done
 
 case "$1" in
 windows)
