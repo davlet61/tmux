@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+FZF_COLORS="bg:#282c34,fg:#abb2bf,hl:#61afef,fg+:#e5c07b,bg+:#414858,hl+:#61afef,prompt:#98c379,pointer:#c678dd,marker:#e06c75,header:#5c6370,border:#495162"
+
+VIM_KEYS="j,k,g,G,q,/,i,ctrl-d,ctrl-u"
+
+FZF_OPTS=(
+    --tmux center,80%,70%
+    --ansi
+    --reverse
+    --border rounded
+    --preview-window 'right,60%'
+    --color "$FZF_COLORS"
+    --no-info
+    --delimiter '\t'
+    --disabled
+    --prompt '  '
+    --header-first
+    --bind "j:down,k:up,g:first,G:last,ctrl-d:half-page-down,ctrl-u:half-page-up"
+    --bind "enter:accept,q:abort"
+    --bind "/:unbind($VIM_KEYS)+enable-search+clear-query+change-prompt(/ )"
+    --bind "i:unbind($VIM_KEYS)+enable-search+clear-query+change-prompt(/ )"
+    --bind "esc:transform:[[ \$FZF_PROMPT == '/ ' ]] && echo 'disable-search+rebind($VIM_KEYS)+clear-query+change-prompt(  )' || echo 'abort'"
+)
+
+case "$1" in
+    windows)
+        selected=$(tmux list-windows -F $'#{window_index}\t#{window_name} (#{window_panes} panes)' | \
+            fzf "${FZF_OPTS[@]}" \
+                --header 'j/k:nav  /:search  q:quit' \
+                --preview 'tmux capture-pane -ep -t :{1}')
+        [ -n "$selected" ] && tmux select-window -t ":${selected%%	*}"
+        ;;
+
+    panes)
+        selected=$(tmux list-panes -s -F $'#{window_index}.#{pane_index}\t[#{window_name}] #{pane_current_command} (#{pane_width}x#{pane_height})' | \
+            fzf "${FZF_OPTS[@]}" \
+                --header 'j/k:nav  /:search  q:quit' \
+                --preview 'tmux capture-pane -ep -t :{1}')
+        [ -n "$selected" ] && tmux select-pane -t ":${selected%%	*}"
+        ;;
+
+    all)
+        selected=$(tmux list-panes -a -F $'#{session_name}:#{window_index}.#{pane_index}\t[#{session_name}/#{window_name}] #{pane_current_command}' | \
+            fzf "${FZF_OPTS[@]}" \
+                --header 'j/k:nav  /:search  q:quit' \
+                --preview 'tmux capture-pane -ep -t {1}')
+        if [ -n "$selected" ]; then
+            target="${selected%%	*}"
+            tmux switch-client -t "$target"
+        fi
+        ;;
+
+    *)
+        echo "Usage: $0 {windows|panes|all}"
+        exit 1
+        ;;
+esac
