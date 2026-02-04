@@ -18,8 +18,8 @@ FZF_OPTS=(
   --bind "j:down,k:up,g:first,G:last,ctrl-d:half-page-down,ctrl-u:half-page-up"
   --bind "enter:accept"
   --bind "q:abort"
-  --bind "/:unbind($VIM_KEYS)+enable-search+clear-query+change-prompt(/ )+rebind(enter)"
-  --bind "i:unbind($VIM_KEYS)+enable-search+clear-query+change-prompt(/ )+rebind(enter)"
+  --bind "/:unbind($VIM_KEYS)+enable-search+clear-query+change-prompt(/ )"
+  --bind "i:unbind($VIM_KEYS)+enable-search+clear-query+change-prompt(/ )"
   --bind "esc:transform:[[ \$FZF_PROMPT == '/ ' ]] && echo 'disable-search+rebind($VIM_KEYS)+clear-query+change-prompt(  )' || echo 'abort'"
 )
 
@@ -27,7 +27,7 @@ case "$1" in
 windows)
   selected=$(tmux list-windows -F $'#{window_index}\t#{window_name} (#{window_panes} panes)' |
     fzf "${FZF_OPTS[@]}" \
-      --header 'j/k:nav  /:search  q:quit  enter:accept' \
+      --header 'j/k:nav  /:search  q:quit' \
       --preview 'tmux capture-pane -ep -t :{1}')
   [ -n "$selected" ] && tmux select-window -t ":${selected%%	*}"
   ;;
@@ -35,15 +35,19 @@ windows)
 panes)
   selected=$(tmux list-panes -s -F $'#{window_index}.#{pane_index}\t[#{window_name}] #{pane_current_command} (#{pane_width}x#{pane_height})' |
     fzf "${FZF_OPTS[@]}" \
-      --header 'j/k:nav  /:search  q:quit  enter:accept' \
+      --header 'j/k:nav  /:search  q:quit' \
       --preview 'tmux capture-pane -ep -t :{1}')
-  [ -n "$selected" ] && tmux select-pane -t ":${selected%%	*}"
+  if [ -n "$selected" ]; then
+    target="${selected%%	*}"
+    tmux select-window -t ":${target%%.*}"
+    tmux select-pane -t ":${target}"
+  fi
   ;;
 
 all)
   selected=$(tmux list-panes -a -F $'#{session_name}:#{window_index}.#{pane_index}\t[#{session_name}/#{window_name}] #{pane_current_command}' |
     fzf "${FZF_OPTS[@]}" \
-      --header 'j/k:nav  /:search  q:quit  enter:accept' \
+      --header 'j/k:nav  /:search  q:quit' \
       --preview 'tmux capture-pane -ep -t {1}')
   [ -n "$selected" ] && tmux switch-client -t "${selected%%	*}"
   ;;
