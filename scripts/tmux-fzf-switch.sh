@@ -4,7 +4,7 @@ SCRIPT_PATH="$(realpath "$0")"
 
 FZF_COLORS="bg:#282c34,fg:#abb2bf,hl:#61afef,fg+:#e5c07b,bg+:#414858,hl+:#61afef,prompt:#98c379,pointer:#c678dd,marker:#e06c75,header:#5c6370,border:#495162"
 
-VIM_KEYS="j,k,g,G,q,/,i,x,?,ctrl-d,ctrl-u,0,1,2,3,4,5,6,7,8,9"
+VIM_KEYS="j,k,g,G,q,/,i,x,n,?,ctrl-d,ctrl-u,0,1,2,3,4,5,6,7,8,9"
 
 # List generator — used for initial display and fzf reload after kill
 if [ "$1" = "--list" ]; then
@@ -33,7 +33,7 @@ FZF_OPTS=(
   --with-nth '2..'
   --disabled
   --prompt '  '
-  --header $'j/k:nav  g/G:ends  ^d/u:page\n/:search  0-9:jump  x:kill  q/esc:quit'
+  --header $'j/k:nav  g/G:ends  ^d/u:page\n/:search  0-9:jump  n:new  x:kill  q/esc:quit'
   --header-first
   --bind "start:toggle-header"
   --bind "j:down,k:up,g:first,G:last,ctrl-d:half-page-down,ctrl-u:half-page-up"
@@ -43,6 +43,7 @@ FZF_OPTS=(
   --bind "i:unbind($VIM_KEYS)+enable-search+clear-query+change-prompt(/ )"
   --bind "esc:transform:[[ \$FZF_PROMPT == '/ ' ]] && echo 'disable-search+rebind($VIM_KEYS)+clear-query+change-prompt(  )' || echo 'abort'"
   --bind "change:transform-query:[[ \$FZF_PROMPT == '/ ' ]] && echo \$FZF_QUERY || echo ''"
+  --bind "n:execute-silent(tmux new-window)+abort"
   --bind "?:toggle-header"
 )
 
